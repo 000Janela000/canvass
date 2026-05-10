@@ -7,6 +7,9 @@ backend/.env
 # Claude local settings (may contain secrets)
 .claude/settings.local.json
 
+# Raw scrape data from /plan-project (large, regenerable, may contain client info)
+.claude/research/
+
 # Python
 __pycache__/
 *.py[cod]

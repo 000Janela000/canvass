@@ -1,7 +1,10 @@
 .PHONY: help setup up down logs logs-backend logs-frontend shell-backend shell-frontend restart clean reset-db build
 
+# Prefer Compose V2 (`docker compose`), fall back to legacy V1 (`docker-compose`).
+COMPOSE := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
+
 help:
-	@echo "Georgian Leads Platform - Makefile Commands"
+	@echo "LeadScout - Makefile Commands"
 	@echo ""
 	@echo "Setup & Start:"
 	@echo "  make setup         - Initial setup (download, build, start)"
@@ -26,45 +29,45 @@ setup:
 	@bash setup.sh
 
 up:
-	@docker-compose up -d
+	@$(COMPOSE) up -d
 	@echo "✓ Services started"
 	@echo "  Frontend: http://localhost:3000"
 	@echo "  Backend:  http://localhost:8000"
 
 down:
-	@docker-compose down
+	@$(COMPOSE) down
 	@echo "✓ Services stopped"
 
 restart:
-	@docker-compose restart
+	@$(COMPOSE) restart
 	@echo "✓ Services restarted"
 
 build:
-	@docker-compose build
+	@$(COMPOSE) build
 	@echo "✓ Images rebuilt"
 
 logs:
-	@docker-compose logs -f
+	@$(COMPOSE) logs -f
 
 logs-backend:
-	@docker-compose logs -f backend
+	@$(COMPOSE) logs -f backend
 
 logs-frontend:
-	@docker-compose logs -f frontend
+	@$(COMPOSE) logs -f frontend
 
 shell-backend:
-	@docker-compose exec backend bash
+	@$(COMPOSE) exec backend bash
 
 shell-frontend:
-	@docker-compose exec frontend sh
+	@$(COMPOSE) exec frontend sh
 
 clean:
-	@docker-compose down -v
+	@$(COMPOSE) down -v
 	@echo "✓ Containers and volumes removed"
 
 reset-db:
-	@echo "🚨 WARNING: This will DELETE all companies and outreach data"
+	@echo "🚨 WARNING: This will DELETE all leads and tracking data"
 	@read -p "Type 'yes' to confirm: " confirm && [ "$$confirm" = "yes" ] || exit 1
 	@rm -f backend/data/leads.db
-	@docker-compose restart backend
+	@$(COMPOSE) restart backend
 	@echo "✓ Database reset"

@@ -6,7 +6,7 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}🚀 Georgian Leads Platform - Setup Script${NC}"
+echo -e "${BLUE}🚀 LeadScout - Setup Script${NC}"
 echo ""
 
 # Check if Docker is installed
@@ -16,27 +16,38 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-if ! command -v docker-compose &> /dev/null; then
-    echo -e "${YELLOW}⚠️  docker-compose is not installed.${NC}"
+# Detect Compose: prefer V2 (`docker compose`), fall back to legacy V1 (`docker-compose`).
+if docker compose version &> /dev/null; then
+    COMPOSE="docker compose"
+elif command -v docker-compose &> /dev/null; then
+    COMPOSE="docker-compose"
+else
+    echo -e "${YELLOW}⚠️  Docker Compose is not installed.${NC}"
+    echo "Docker Desktop ships it built-in. If Docker Desktop is running, try restarting it."
     exit 1
 fi
 
-echo -e "${GREEN}✓ Docker found${NC}"
+echo -e "${GREEN}✓ Docker found (using: ${COMPOSE})${NC}"
 echo ""
 
-# Create .env file from example if it doesn't exist
+# Create .env file from example if it doesn't exist (only DATABASE_URL is read from env;
+# all API keys are configured via the Settings page in the UI).
 if [ ! -f backend/.env ]; then
     echo -e "${BLUE}📝 Creating .env file...${NC}"
     cp backend/.env.example backend/.env
     echo -e "${GREEN}✓ .env created from template${NC}"
-    echo -e "${YELLOW}  📌 Optional: Edit backend/.env to add API keys for enrichment/email${NC}"
 else
     echo -e "${GREEN}✓ .env already exists${NC}"
 fi
 
 echo ""
 echo -e "${BLUE}🐳 Building and starting Docker containers...${NC}"
-docker-compose up -d --build
+if ! $COMPOSE up -d --build; then
+    echo ""
+    echo -e "${YELLOW}❌ Build failed. See the error above.${NC}"
+    echo "Run '${COMPOSE} logs' to inspect, or fix the reported error and retry."
+    exit 1
+fi
 
 # Wait for backend to be ready
 echo ""
@@ -60,12 +71,15 @@ echo "  API Docs:  http://localhost:8000/docs"
 echo ""
 echo -e "${BLUE}📝 Next steps:${NC}"
 echo "  1. Open http://localhost:3000 in your browser"
-echo "  2. Go to Import Data and upload OpenSanctions Georgian registry"
-echo "  3. Go to Enrichment to enrich company data"
-echo "  4. Go to Campaigns to send bulk outreach"
+echo "  2. Go to Settings and paste in your API keys:"
+echo "     - Google Places API key (up to 3 for rotation)"
+echo "     - Google CSE API key + CX (for Facebook page lookup)"
+echo "     - Facebook Graph access token (optional, enriches leads)"
+echo "  3. Go to Discover to pull businesses without websites"
+echo "  4. Go to My Leads to work the list"
 echo ""
 echo -e "${BLUE}🛑 To stop:${NC}"
-echo "  docker-compose down"
+echo "  ${COMPOSE} down"
 echo ""
 echo -e "${BLUE}📚 More info:${NC}"
-echo "  See README.md and COMPLETE_SYSTEM_GUIDE.md"
+echo "  See README.md and docs/features/leadscout/"

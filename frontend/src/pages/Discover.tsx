@@ -49,7 +49,7 @@ export default function Discover() {
       const data = await api.searchPlaces({ city, category })
       setResults(data.results)
       // Pre-select businesses without websites
-      const noWebsite = new Set(data.results.filter((r: DiscoverResult) => !r.has_website).map((r: DiscoverResult) => r.google_place_id))
+      const noWebsite = new Set<string>(data.results.filter((r: DiscoverResult) => !r.has_website).map((r: DiscoverResult) => r.google_place_id))
       setSelected(noWebsite)
     } catch (e: any) {
       setError(e.message)
